@@ -1,8 +1,8 @@
 <?php
-	date_default_timezone_set('America/New_York');
+	date_default_timezone_set('Asia/Kuwait');
     $str = file_get_contents('/var/www/html/api/piPlant/data.json');
     $json = json_decode($str, true);
-   
+   echo 'ins';
     
     $host = $json['host'];
     $userName = $json['userName'];
@@ -17,9 +17,9 @@
     $dbpass=$password;
     $dbname=$db;
     
-sleep(55);
+
 	$conn = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
-	$allUser = "SELECT * from MotorTimer where cronStatus = 0";
+	$allUser = "SELECT * from MotorTimer where cronStatus = 0 group by motorId";
 	$userSql = "SELECT * from register where genNoti = 1";
 
 	
@@ -33,15 +33,29 @@ sleep(55);
 	    $endTime = $data['endTime'];	
 	    $cmd = $data['cmd'];
 	    $motorId = $data['motorId'];
-
+	 $endMin = $data['endMin'];
+	 $endSec = $data['endSec'];
 	    $time = date('Y-m-d h:i');
         $end_time = date('Y-m-d h:i', strtotime($endTime));
-echo $time;echo "hai";echo $end_time;
 
-	    if($time == $end_time)
-	    {
-$sleepTime = date('s', strtotime($endTime));
 
+	    
+if($endMin != 0)
+{
+$sleepTime = $endMin*60;
+$sleepTime = $sleepTime+$endSec;
+}
+else
+{
+$sleepTime = $endSec;
+}
+
+sleep($sleepTime);
+	$checkUser = "SELECT * from MotorTimer where cronStatus = 0 and motorId = '$motorId'";
+	$rest = mysqli_query($conn,$checkUser);
+	$res = mysqli_num_rows($rest);
+
+	if($res > 0) {
 
 			$updateMotor = "UPDATE motorName set motorStatus = 0 where motorId = '$motorId'";
 			$resultMotor = mysqli_query($conn,$updateMotor);
@@ -52,20 +66,22 @@ $sleepTime = date('s', strtotime($endTime));
 			$motorName = "SELECT * from motorName where motorId = '$motorId' ";
 			$resultMotorName = mysqli_query($conn,$motorName);
 			$dataName = mysqli_fetch_assoc($resultMotorName);
-
+	
 			$message = $dataName['name']." Switched Off";
 			$title = "Motor Alarm";
 
 			$resultOff = mysqli_query($conn,$userSql);
-
+	
+	
+exec("sudo ".$cmd);
             while($user = mysqli_fetch_assoc($resultOff))
             {
 		echo $user['userId'];
                send_gcm_notify($user['deviceToken'],$message,$title,$dbhost);
 
             }
-exec("sudo ".$cmd);
-	    }	
+
+	   }
 	
 	}
 
@@ -73,7 +89,7 @@ exec("sudo ".$cmd);
 	{
 
 
-	    if (!defined('FIREBASE_API_KEY')) define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGEYqULDMblKQg40gmz6n6uqTJG7rsKVi1E37Rm1Qal682L7pRrfa8B1nbb--6JtxLqDaerUpqF02MRXmNDLfQwpRV2YrySiOB9UiCWekVa20piiX1hzFVYiKH4qpPv3CEV18sw");
+	    if (!defined('FIREBASE_API_KEY')) define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGj2Xvo09h3t_31FX8CppXx2-qhLZnOUUD3mIMhcKTPvVWgQbpSXVSP9OhFccTZLIzFVelP7s_xf3WXuueBWpm5A_h7-e4avkrFJpkjSDNMJDnPg8txofEMQybW8uYUcHD6-L5T");
 	        if (!defined('FIREBASE_FCM_URL')) define("FIREBASE_FCM_URL", "https://fcm.googleapis.com/fcm/send");
 
 			#$me = html_entity_decode($message,ENT_HTML5);

@@ -1,6 +1,6 @@
 <?php
 
-date_default_timezone_set('Asia/Kolkata');
+date_default_timezone_set('Asia/Kuwait');
 $str = file_get_contents('/var/www/html/api/piPlant/data.json');
     $json = json_decode($str, true);
     #$obj = json_encode($json);
