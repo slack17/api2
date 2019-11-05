@@ -293,7 +293,10 @@ function register()
     $insert = "INSERT INTO  register (userId,email,deviceToken,temNoti,humNoti,genNoti) VALUES ($userId,'$email','$deviceToken','temNoti','humNoti','genNoti')";
 
     //SELECT * from motorName join timer on timer.motorId = motorName.motorId  where motorName.motorId IN('MOTOR1','MOTOR2', 'MOTOR3','MOTOR4')
-    $select  = "SELECT motorName.* FROM motorName LEFT JOIN timer on timer.motorId = motorName.motorId WHERE motorName.motorId IN($req->device) GROUP BY motorName.motorId";
+    $select  = "SELECT motorName.*, timer.*, ifnull(MotorTimer.cronStatus,1) as countTimerStatus FROM motorName 
+LEFT JOIN timer on timer.motorId = motorName.motorId 
+LEFT JOIN MotorTimer on MotorTimer.motorId = motorName.motorId  
+WHERE motorName.motorId IN($req->device) GROUP BY motorName.motorId";
     $selectSensor  = "SELECT * from sensorName join sensorAlert on sensorAlert.device = sensorName.device";
 
     $uniqSen = "SELECT distinct device  FROM soil group by  device";
@@ -411,11 +414,9 @@ function register()
                     $offTimes[$key1] = $ti->MotorOffTime;
                     $flags[$key1] = $ti->timerFlag;
                 }
-                $qryMotorData[$key]->MotorOnTime = (!empty($onTimes)) ? implode(',', $onTimes) : "";
-                $qryMotorData[$key]->MotorOffTime = (!empty($offTimes)) ?  implode(',', $offTimes) : "";
+                $qryMotorData[$key]->MotorOnTime = implode(',', $onTimes);
+                $qryMotorData[$key]->MotorOffTime = implode(',', $offTimes);
                 $qryMotorData[$key]->timerFlag = implode(',', $flags);
-                $qryMotorData[$key]->switchonoffstatus = (!empty($onTimes)) ? 1 : 0;
-
             }
         }
 
@@ -552,8 +553,8 @@ function register()
                     $offTimes[$key1] = $ti->MotorOffTime;
                     $flags[$key1] = $ti->timerFlag;
                 }
-                $qryMotorData[$key]->MotorOnTime = (!empty($onTimes)) ? implode(',', $onTimes) : "";
-                $qryMotorData[$key]->MotorOffTime = (!empty($offTimes)) ?  implode(',', $offTimes) : "";
+                $qryMotorData[$key]->MotorOnTime = implode(',', $onTimes);
+                $qryMotorData[$key]->MotorOffTime = implode(',', $offTimes);
                 $qryMotorData[$key]->timerFlag = implode(',', $flags);
             }
         }
@@ -774,7 +775,8 @@ function updateMotorStatus()
     $qrymoterData = $db->prepare($moterData);
     $qrymoterData->execute();
     $mdata = $qrymoterData->fetch(PDO::FETCH_OBJ);
-    
+
+
     $qry = $db->prepare($chk);
     $qry->execute();
     $chkData = $qry->fetch(PDO::FETCH_OBJ);
@@ -782,20 +784,20 @@ function updateMotorStatus()
     {
          
 	 $qryUpM = $db->prepare($updateMotor);
-	 $qryUpM->execute();
-	 $qrySelect = $db->prepare($select);
-	 $qrySelect->execute();
-	 if($show == 'Off')
-	 {
-	     $qryUpMs = $db->prepare($updateMotorCron);
-	     $qryUpMs->execute();
-	 }
-	 $motor_name = isset($mdata->name) ? $mdata->name : '';
-	 $message = $motor_name." Switched ".$show ;$title="Motor Switched";
-	 exec("sudo ".$trigger);
-	 send_gcm_notify($chkData->deviceToken,$message,$title);
+         $qryUpM->execute();
+         $qrySelect = $db->prepare($select);
+         $qrySelect->execute();
+ if($show == 'Off')
+{
+$qryUpMs = $db->prepare($updateMotorCron);
+ $qryUpMs->execute();
+}
+   	 $message = $mdata->name." Switched ".$show ;$title="Motor Switched";
+    exec("sudo ".$trigger);
+	send_gcm_notify($chkData->deviceToken,$message,$title);
 	
-	$update = "INSERT INTO updateMotorCron (userId,message,title,cronStatus) VALUES ('$userId','$message','$title','0')";
+
+	  $update = "INSERT INTO updateMotorCron (userId,message,title,cronStatus) VALUES ('$userId','$message','$title','0')";
 	$qryUp = $db->prepare($update);
 	$qryUp->execute();
    	
@@ -894,7 +896,6 @@ function setTimer()
     $motorId = isset($req->motorId) ? $req->motorId : '';
     $deviceToken = isset($req->deviceToken) ? $req->deviceToken : '';
     $email = isset($req->email) ? $req->email : '';
-    $timerImage = isset($req->timerImage) ? $req->timerImage : '';
 
     $MotorOn = isset($req->MotorOn) ? $req->MotorOn : '';
     $MotorOff = isset($req->MotorOff) ? $req->MotorOff : '';
@@ -905,7 +906,7 @@ function setTimer()
     $status =  isset($req->status) ? $req->status : '';
     $timerFlag = isset($req->timerFlag) ? $req->timerFlag : '';
 
-    $updateMotor = "UPDATE motorName SET name ='$name', timerImage='$timerImage' WHERE motorId= '$motorId'";
+    $updateMotor = "UPDATE motorName SET name ='$name' WHERE motorId= '$motorId'";
     $updateMotorqry = $db->prepare($updateMotor);
     $updateMotorqry->execute();
 
@@ -923,22 +924,23 @@ function setTimer()
         $deleteTimer = "DELETE FROM timer WHERE motorId='$motorId'";
         $deleteqry = $db->prepare($deleteTimer);
         $deleteqry->execute();
+
+        $onTimes = explode(',', $MotorOnTime);
+        $offTimes = explode(',', $MotorOffTime);
+        $flags = explode(',', $timerFlag);
         $count = 0;
-        if($MotorOnTime!="") {
-            $onTimes = explode(',', $MotorOnTime);
-            $offTimes = explode(',', $MotorOffTime);
-            $flags = explode(',', $timerFlag);
-            if (count($onTimes) > 0 && (count($onTimes) == count($offTimes))) {
-                $timerCount = count($onTimes);
-                for ($i = 0; $i < $timerCount; $i++) {
-                    $onTime = isset($onTimes[$i]) ? date('H:i:s', strtotime($onTimes[$i])) : null;
-                    $offTime = isset($offTimes[$i]) ? date('H:i:s', strtotime($offTimes[$i])) : null;
-                    $flag = isset($flags[$i]) ? trim($flags[$i]) : 0;
-                    $insertTimer = "INSERT INTO timer (motorId, userId, MotorOn, MotorOff, MotorOnTime, MotorOffTime, fixedTime, status, timerFlag) VALUES ('$motorId', '$userId', '$MotorOn', '$MotorOff', '$onTime', '$offTime', '$fixedTime', '$status', '$flag')";
-                    $qryTimer = $db->prepare($insertTimer);
-                    $qryTimer->execute();
-                    $count++;
-                }
+        if(count($onTimes) > 0 && (count($onTimes) == count($offTimes)))
+        {
+            $timerCount = count($onTimes);
+            for($i=0; $i<$timerCount; $i++)
+            {
+                $onTime = isset($onTimes[$i]) ? date('H:i:s', strtotime($onTimes[$i])) : null;
+                $offTime = isset($offTimes[$i]) ? date('H:i:s', strtotime($offTimes[$i])) : null;
+                $flag = isset($flags[$i]) ? trim($flags[$i]) : 0;
+                $insertTimer= "INSERT INTO timer (motorId, userId, MotorOn, MotorOff, MotorOnTime, MotorOffTime, fixedTime, status, timerFlag) VALUES ('$motorId', '$userId', '$MotorOn', '$MotorOff', '$onTime', '$offTime', '$fixedTime', '$status', '$flag')";
+                $qryTimer = $db->prepare($insertTimer);
+                $qryTimer->execute();
+                $count++;
             }
         }
 

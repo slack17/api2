@@ -67,7 +67,7 @@ sleep($sleepTime);
 			$resultMotorName = mysqli_query($conn,$motorName);
 			$dataName = mysqli_fetch_assoc($resultMotorName);
 	
-			$message = $dataName['name']." Switched Off";
+			$message = $dataName['name']." Counter Off";
 			$title = "Motor Alarm";
 
 			$resultOff = mysqli_query($conn,$userSql);

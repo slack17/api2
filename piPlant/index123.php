@@ -1,25 +1,18 @@
 <?php
-date_default_timezone_set('Asia/Kuwait');
+date_default_timezone_set('America/New_York');
 require_once('PHPMailer_5.2.0/class.phpmailer.php');
+//$con = mysql_connect('localhost', 'root', 'NDM1MDk=/OTg5NDY=') or ('error');
+//mysql_select_db('phpauto', $con);
 require 'Slim/Slim.php';
 
 $app = new Slim();
-
 $app->config('debug', true);
-//$app->error('custom_error_handler');
-
-//PHP 5 >= 5.3
 $app->error(function ( Exception $e ) use ($app) 
 {
     $app->render('error.php');
 });
 
-/*function custom_error_handler( Exception $e ){
-$app = Slim::getInstance();
-$app->render('error.php');
-}*/
-
-
+# functions below
 $app->POST('/register','register');
 $app->POST('/getReading','getReading');
 $app->POST('/updateMotorName','updateMotorName');
@@ -30,98 +23,73 @@ $app->POST('/setAlert','setAlert');
 $app->get('/readJson','readJson');
 $app->POST('/dbDetails','dbDetails');
 $app->POST('/send','send');
-$app->POST('/timerMotor','timerMotor');
-$app->POST('/getSensorImage','getSensorImage');
-$app->POST('/getTimerImage','getTimerImage');
-
-
-
-
-//parking_lot_search($userId,$searchValue)
-
-
 
 $app->run();
 
 
+# DB connection
+function getConnection() {
 
-function getSensorImage()
-{	
-	$fileList = glob('images/sensor/*');
-	 
+    $dbhost="localhost";
+    $dbuser="khaled";
+    $dbpass="test123";
+    $dbname="phpauto";
+    $dbh = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $dbh;
 
-	foreach($fileList as $filename)
-	{
-	   $data[] = $filename;
-		 
-	}
-	$data1['imageUrls'] = $data;
-	echo json_encode($data1);
-}
 
-function getTimerImage()
-{	
-	$fileList = glob('images/timer/*');
-	 
-
-	foreach($fileList as $filename)
-	{
-	   $data[] = $filename;
-		 
-	}
-	$data1['imageUrls'] = $data;
-	echo json_encode($data1);
 }
 
 
+# above mentioned methods
 function send()
 {
-$devicetoken="dYauN7xASfQ:APA91bFVJnfxO8kbTU6X7CnxeiZVz1EEOJaCRe85hQMcnnUWTHPa0G8e6A2XuGvYyG455xPskg2COq5QeJdBG1XwdGjmxL0TfoO0IM46cb2c3pykFbyDOd92v1sgZMawKyG0MLFcYt0l";$message="hi";$title="hi";$ip = 0;
-
-    if (!defined('FIREBASE_API_KEY')) define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGEYqULDMblKQg40gmz6n6uqTJG7rsKVi1E37Rm1Qal682L7pRrfa8B1nbb--6JtxLqDaerUpqF02MRXmNDLfQwpRV2YrySiOB9UiCWekVa20piiX1hzFVYiKH4qpPv3CEV18sw");
-        if (!defined('FIREBASE_FCM_URL')) define("FIREBASE_FCM_URL", "https://fcm.googleapis.com/fcm/send");
-
-#$me = html_entity_decode($message,ENT_HTML5);
-            $fields = array(
-                'to' => $devicetoken ,
-                'priority' => "high",
-                'notification' => array( "tag"=>"chat", "title"=>$title,"body" =>$message,"ip"=>$ip,"priority"=>"high"),
-            );
-// echo "<br>";
-//json_encode($fields);
-//echo "<br>";
-            $headers = array(
-                'Authorization: key=' . FIREBASE_API_KEY,
-                'Content-Type: application/json'
-            );
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, FIREBASE_FCM_URL);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-            
-
-            $result = curl_exec($ch);
-            echo $result;
-            if ($result === FALSE)
-            {
-                die('Problem occurred: ' . curl_error($ch));
-            }
-            curl_close($ch);
-
+    $devicetoken="dYauN7xASfQ:APA91bFVJnfxO8kbTU6X7CnxeiZVz1EEOJaCRe85hQMcnnUWTHPa0G8e6A2XuGvYyG455xPskg2COq5QeJdBG1XwdGjmxL0TfoO0IM46cb2c3pykFbyDOd92v1sgZMawKyG0MLFcYt0l";$message="hi";$title="hi";$ip = 0;
+    if (!defined('FIREBASE_API_KEY')) 
+    {
+        define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGEYqULDMblKQg40gmz6n6uqTJG7rsKVi1E37Rm1Qal682L7pRrfa8B1nbb--6JtxLqDaerUpqF02MRXmNDLfQwpRV2YrySiOB9UiCWekVa20piiX1hzFVYiKH4qpPv3CEV18sw");
+    }
+    if (!defined('FIREBASE_FCM_URL')) 
+    {
+        define("FIREBASE_FCM_URL", "https://fcm.googleapis.com/fcm/send");
+    }
+    
+    $fields = array(
+        'to' => $devicetoken ,
+        'priority' => "high",
+        'notification' => array( "tag"=>"chat", "title"=>$title,"body" =>$message,"ip"=>$ip,"priority"=>"high"),
+    );
+    
+    $headers = array(
+        'Authorization: key=' . FIREBASE_API_KEY,
+        'Content-Type: application/json'
+    );
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, FIREBASE_FCM_URL);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+    
+    $result = curl_exec($ch);
+    echo $result;
+    if ($result === FALSE)
+    {
+        die('Problem occurred: ' . curl_error($ch));
+    }
+    
+    curl_close($ch);
 }
+
 
 function writeJson($data)
 {
-    
-    $fp = fopen('
-', 'w');
+    $fp = fopen('data.json', 'w');
     fwrite($fp, $data);
     fclose($fp);
-
 }
 
 
@@ -133,15 +101,11 @@ function readJson()
 }
 
 
-
 function registerOld()
 {
-
-
-    
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
     $userId = $req->userId;
     $email = $req->email;
@@ -153,13 +117,11 @@ function registerOld()
     $select  = "SELECT * from motorName where userId = $userId";
     $selectSensor  = "SELECT * from sensorName where userId = $userId";
     $uniqSen = "SELECT distinct device  FROM soil group by  device";
-
-
+    
     $soilSen = $db->prepare($uniqSen);
     $soilSen->execute();
     $soilSenData = $soilSen->fetchAll(PDO::FETCH_OBJ);
-
-
+    
     $qry = $db->prepare($chk);
     $qry->execute();
     $chkData = $qry->fetch(PDO::FETCH_OBJ);
@@ -176,16 +138,15 @@ function registerOld()
         $qrySen = $db->prepare($selectSensor);
         $qrySen->execute();
         $qrySenData = $qrySen->fetchAll(PDO::FETCH_OBJ);
-
-
-        $res = array('Result'=>'Success',
-                 'Status'=>'Registered successfully',
-                 'userDetails'=>$qryMotorData,
-                'soilSensor'=>$qrySenData
-                );
+        
+        $res = array(
+            'Result'=>'Success',
+            'Status'=>'Registered successfully',
+            'userDetails'=>$qryMotorData,
+            'soilSensor'=>$qrySenData
+        );
+        
         echo json_encode($res);exit;
-
-
     }
     else
     {
@@ -195,82 +156,76 @@ function registerOld()
          #motor Register 
          for($i = 0 ;$i< 5; $i++)
          {
-            $insertButton= "INSERT INTO motorName (motorId, userId, name)VALUES ($i, '$userId', 'MOTOR $i');";
-            $qryMotorIns = $db->prepare($insertButton);
-            $qryMotorIns->execute();
+             $insertButton= "INSERT INTO motorName (motorId, userId, name)VALUES ($i, '$userId', 'MOTOR $i');";
+             $qryMotorIns = $db->prepare($insertButton);
+             $qryMotorIns->execute();
          }
          foreach($soilSenData as $sen)
          {
-            $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (1, '$sen->device', '$userId','$sen->device',1)";
-            $qrySenIns = $db->prepare($insertSensor);
-            $qrySenIns->execute();
-
+             $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (1, '$sen->device', '$userId','$sen->device',1)";
+             $qrySenIns = $db->prepare($insertSensor);
+             $qrySenIns->execute();
          }
-
+         
         $qrySen = $db->prepare($selectSensor);
         $qrySen->execute();
         $qrySenData = $qrySen->fetchAll(PDO::FETCH_OBJ);
-
+        
         $qryMotor = $db->prepare($select);
         $qryMotor->execute();
         $qryMotorData = $qryMotor->fetchAll(PDO::FETCH_OBJ);
-
-        $res = array('Result'=>'Success',
-                 'Status'=>'Registered successfully',
-                 'motor'=>$qryMotorData,
-                 'soilSensor'=>$qrySenData);
+        
+        $res = array(
+            'Result'=>'Success',
+            'Status'=>'Registered successfully',
+            'motor'=>$qryMotorData,
+            'soilSensor'=>$qrySenData
+        );
+        
         echo json_encode($res);exit;
-
     }
-
 }
+
+
 function dbDetails()
-{
-
-	$request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
-
+{    
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
-	$host = $req->host;
-	$userName = $req->userName;
-	$password = $req->password;
-	$db = $req->db;
-	$soil = $req->soil;
-	$room = $req->room;
-	$water = $req->water;
-
-    /*$chk = "SELECT * from register where userId = $userId and email = $email";
-    $qry = $db->prepare($chk);
-    $qry->execute();
-    $chkData = $qry->fetch(PDO::FETCH_OBJ);
-    if($chkData)
-    */
-       
-
-	$res = array('Result'=>'Success',
-                 'host' =>$host,
-				'userName' =>$userName,
-				'password' =>$password,
-				'db' =>$db,
-				'soil' =>$soil,
-				'room' =>$room,
-				'water' =>$water
-);
-        $data = json_encode($res);
-        writeJson($data);
-        echo $data;exit;
-        exit;
-
+    $host = $req->host;
+    $userName = $req->userName;
+    $password = $req->password;
+    $db = $req->db;
+    $soil = $req->soil;
+    $room = $req->room;
+    $water = $req->water;
+    
+    $res = array(
+        'Result'=>'Success',
+        'host' =>$host,
+        'userName' =>$userName,
+        'password' =>$password,
+        'db' =>$db,
+        'soil' =>$soil,
+        'room' =>$room,
+        'water' =>$water
+    );
+    
+    $data = json_encode($res);
+    writeJson($data);
+    echo $data;exit;
+    exit;
 }
 
 
 function register()
 {
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
-    $date=date("Y-m-d H:i:s");
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
+    
+    $date = date("Y-m-d H:i:s");
     $userId = $req->userId;
     $email = $req->email;
     $deviceToken = $req->deviceToken;
@@ -278,161 +233,54 @@ function register()
     $roomSensorName = $req->roomSensorName;
     $waterSensorName = $req->waterSensorName;
     $motorNames = $req->motorNames;
-
+    
     $temNoti = $req->temNoti;
     $humNoti = $req->humNoti;
     $genNoti = $req->genNoti;
-
+    
     $sensorList = explode(",",$sensorNames);
     $motorList = explode(",",$motorNames);
     $waterList = explode(",",$waterSensorName);
     $roomList = explode(",",$roomSensorName);
-
-    $chkToken ="UPDATE register set deviceToken = '' where deviceToken = '$deviceToken'";
-    $update = "UPDATE register set email = '$email',deviceToken = '$deviceToken', temNoti='$temNoti',humNoti='$humNoti',genNoti='$genNoti' where userId = $userId";
-    $insert = "INSERT INTO  register (userId,email,deviceToken,temNoti,humNoti,genNoti) VALUES ($userId,'$email','$deviceToken','temNoti','humNoti','genNoti')";
-
-    //SELECT * from motorName join timer on timer.motorId = motorName.motorId  where motorName.motorId IN('MOTOR1','MOTOR2', 'MOTOR3','MOTOR4')
-    $select  = "SELECT motorName.* FROM motorName LEFT JOIN timer on timer.motorId = motorName.motorId WHERE motorName.motorId IN($req->device) GROUP BY motorName.motorId";
+    
+    $select  = "SELECT * from motorName join timer on timer.motorId = motorName.motorId";
     $selectSensor  = "SELECT * from sensorName join sensorAlert on sensorAlert.device = sensorName.device";
-
     $uniqSen = "SELECT distinct device  FROM soil group by  device";
+    
     $soilSen = $db->prepare($uniqSen);
     $soilSen->execute();
     $soilSenData = $soilSen->fetchAll(PDO::FETCH_OBJ);
-
+    
     $chk = "SELECT * from register where userId = $userId";
     $qry = $db->prepare($chk);
     $qry->execute();
     $chkData = $qry->fetch(PDO::FETCH_OBJ);
     if($chkData)
     {
-        $stmts = $db->prepare($chkToken);
-        $stmts->execute();
-
+        $update = "UPDATE register SET email = '$email', deviceToken = '$deviceToken', temNoti='$temNoti', humNoti='$humNoti', genNoti='$genNoti' WHERE userId = $userId";
         $stmt = $db->prepare($update);
         $stmt->execute();
         #updated
-
+        
         $qryMotor = $db->prepare($select);
         $qryMotor->execute();
         $qryMotorData = $qryMotor->fetchAll(PDO::FETCH_OBJ);
-
+        
         $qrySen = $db->prepare($selectSensor);
         $qrySen->execute();
         $qrySenData = $qrySen->fetchAll(PDO::FETCH_OBJ);
-
-        foreach($motorList as $motor)
-        {
-            $chkMo = "SELECT * from motorName where motorId = '$motor'";
-            $qryMo = $db->prepare($chkMo);
-            $qryMo->execute();
-            $chkDataMo = $qryMo->fetch(PDO::FETCH_OBJ);
-            if(!$chkDataMo)
-            {
-                $insertButton= "INSERT INTO motorName (motorId, userId, name,status)VALUES ('$motor', 0, '$motor',0);";
-                $qryMotorIns = $db->prepare($insertButton);
-                $qryMotorIns->execute();
-
-                $insertButtonTimer= "INSERT INTO timer (motorId) VALUES ('$motor');";
-                $qryMotorInsTime = $db->prepare($insertButtonTimer);
-                $qryMotorInsTime->execute();
-            }
-        }
-        foreach($sensorList as $sen)
-        {
-            $chkSen = "SELECT * from sensorName where device = '$sen'";
-            $qrySen = $db->prepare($chkSen);
-            $qrySen->execute();
-            $chkDataSen = $qrySen->fetch(PDO::FETCH_OBJ);
-            if(!$chkDataSen)
-            {
-                $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (1, '$sen', '0','$sen',1)";
-                $qrySenIns = $db->prepare($insertSensor);
-                $qrySenIns->execute();
-
-                $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (1, '$sen')";
-                $qrySenAlert = $db->prepare($insertsensorAlert);
-                $qrySenAlert->execute();
-            }
-        }
-        foreach($waterList as $watersen)
-        {
-            $chkSen = "SELECT * from sensorName where device = '$watersen'";
-            $qrySen = $db->prepare($chkSen);
-            $qrySen->execute();
-            $chkDataSen = $qrySen->fetch(PDO::FETCH_OBJ);
-            if(!$chkDataSen)
-            {
-                $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (2, '$watersen', '0','$watersen',1)";
-                $qrySenIns = $db->prepare($insertSensor);
-                $qrySenIns->execute();
-
-                $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (2, '$watersen')";
-                $qrySenAlert = $db->prepare($insertsensorAlert);
-                $qrySenAlert->execute();
-            }
-
-        }
-        foreach($roomList as $roomsen)
-        {
-            $chkSen = "SELECT * from sensorName where device = '$roomsen'";
-            $qrySen = $db->prepare($chkSen);
-            $qrySen->execute();
-            $chkDataSen = $qrySen->fetch(PDO::FETCH_OBJ);
-            if(!$chkDataSen)
-            {
-                $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (3, '$roomsen', '0','$roomsen',1)";
-                $qrySenIns = $db->prepare($insertSensor);
-                $qrySenIns->execute();
-
-
-                $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (3, '$roomsen')";
-                $qrySenAlert = $db->prepare($insertsensorAlert);
-                $qrySenAlert->execute();
-            }
-        }
-
-        if(count($qryMotorData) > 0)
-        {
-            foreach ($qryMotorData as $key => $mt)
-            {
-                $motorId = $mt->motorId;
-                $timer = "SELECT * FROM timer WHERE motorId='$motorId'";
-                $qryTimer = $db->prepare($timer);
-                $qryTimer->execute();
-                $qryTimerData = $qryTimer->fetchAll(PDO::FETCH_OBJ);
-                $onTimes = array();
-                $offTimes = array();
-                $flags = array();
-                foreach ($qryTimerData as $key1 => $ti)
-                {
-                    $onTimes[$key1] = $ti->MotorOnTime;
-                    $offTimes[$key1] = $ti->MotorOffTime;
-                    $flags[$key1] = $ti->timerFlag;
-                }
-                $qryMotorData[$key]->MotorOnTime = (!empty($onTimes)) ? implode(',', $onTimes) : "";
-                $qryMotorData[$key]->MotorOffTime = (!empty($offTimes)) ?  implode(',', $offTimes) : "";
-                $qryMotorData[$key]->timerFlag = implode(',', $flags);
-                $qryMotorData[$key]->switchonoffstatus = (!empty($onTimes)) ? 1 : 0;
-
-            }
-        }
-
+        
         $res = array(
             'Result'=>'Success',
             'Status'=>'Registered successfully',
             'mototData'=>$qryMotorData,
             'soilSensor'=>$qrySenData
         );
-
         echo json_encode($res);exit;
     }
     else //
     {
-        $stmts = $db->prepare($chkToken);
-        $stmts->execute();
-
+        $insert = "INSERT INTO  register (userId,email,deviceToken,temNoti,humNoti,genNoti) VALUES ($userId,'$email','$deviceToken','temNoti','humNoti','genNoti')";
         $stmt = $db->prepare($insert);
         $stmt->execute();
         #inserted
@@ -443,17 +291,18 @@ function register()
             $qryMo = $db->prepare($chkMo);
             $qryMo->execute();
             $chkDataMo = $qryMo->fetch(PDO::FETCH_OBJ);
-            if(!$chkDataMo)
+            if(!$chkDataMo)     // check unqiue
             {
-                $insertButton= "INSERT INTO motorName (motorId, userId, name,status)VALUES ('$motor', 0, '$motor',0);";
+                $insertButton= "INSERT INTO motorName (motorId, userId, name,status) VALUES ('$motor', 0, '$motor',0);";
                 $qryMotorIns = $db->prepare($insertButton);
                 $qryMotorIns->execute();
-
+                
                 $insertButtonTimer= "INSERT INTO timer (motorId) VALUES ('$motor');";
                 $qryMotorInsTime = $db->prepare($insertButtonTimer);
                 $qryMotorInsTime->execute();
             }
         }
+        
         foreach($sensorList as $sen)
         {
             $chkSen = "SELECT * from sensorName where device = '$sen'";
@@ -465,18 +314,16 @@ function register()
                 $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (1, '$sen', '0','$sen',1)";
                 $qrySenIns = $db->prepare($insertSensor);
                 $qrySenIns->execute();
-
+                
                 $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (1, '$sen')";
                 $qrySenAlert = $db->prepare($insertsensorAlert);
                 $qrySenAlert->execute();
             }
-
         }
         foreach($waterList as $watersen)
         {
-
             $chkSen = "SELECT * from sensorName where device = '$watersen'";
-
+            
             $qrySen = $db->prepare($chkSen);
             $qrySen->execute();
             $chkDataSen = $qrySen->fetch(PDO::FETCH_OBJ);
@@ -485,12 +332,11 @@ function register()
                 $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (2, '$watersen', '0','$watersen',1)";
                 $qrySenIns = $db->prepare($insertSensor);
                 $qrySenIns->execute();
-
+                
                 $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (2, '$watersen')";
                 $qrySenAlert = $db->prepare($insertsensorAlert);
                 $qrySenAlert->execute();
             }
-
         }
         foreach($roomList as $roomsen)
         {
@@ -503,82 +349,56 @@ function register()
                 $insertSensor = "INSERT INTO sensorName (type, device, userId,name,status)VALUES (3, '$roomsen', '0','$roomsen',1)";
                 $qrySenIns = $db->prepare($insertSensor);
                 $qrySenIns->execute();
-
-
+                
+                
                 $insertsensorAlert = "INSERT INTO sensorAlert (type, device)VALUES (3, '$roomsen')";
                 $qrySenAlert = $db->prepare($insertsensorAlert);
                 $qrySenAlert->execute();
             }
-
+            
         }
-
+        
         $qrySen = $db->prepare($selectSensor);
         $qrySen->execute();
         $qrySenData = $qrySen->fetchAll(PDO::FETCH_OBJ);
-
+        
         $qryMotor = $db->prepare($select);
         $qryMotor->execute();
         $qryMotorData = $qryMotor->fetchAll(PDO::FETCH_OBJ);
-
-
+        
+        
         $allUser = "SELECT * from register where userId != $userId";
         $qry = $db->prepare($allUser);
         $qry->execute();
         $chkAllData = $qry->fetchAll(PDO::FETCH_OBJ);
-
+        
         $message ="Register Alert" ;$title="New User Registered";
         foreach($chkAllData as $user)
         {
-
-            send_gcm_notify($user->deviceToken,$message,$title);
-
+            
+            send_gcm_notify($user->deviceToken,$message,$title,$ip);
+            
         }
-
-        if(count($qryMotorData) > 0)
-        {
-            foreach ($qryMotorData as $key => $mt)
-            {
-                $motorId = $mt->motorId;
-                $timer = "SELECT * FROM timer WHERE motorId='$motorId'";
-                $qryTimer = $db->prepare($timer);
-                $qryTimer->execute();
-                $qryTimerData = $qryTimer->fetchAll(PDO::FETCH_OBJ);
-                $onTimes = array();
-                $offTimes = array();
-                $flags = array();
-                foreach ($qryTimerData as $key1 => $ti)
-                {
-                    $onTimes[$key1] = $ti->MotorOnTime;
-                    $offTimes[$key1] = $ti->MotorOffTime;
-                    $flags[$key1] = $ti->timerFlag;
-                }
-                $qryMotorData[$key]->MotorOnTime = (!empty($onTimes)) ? implode(',', $onTimes) : "";
-                $qryMotorData[$key]->MotorOffTime = (!empty($offTimes)) ?  implode(',', $offTimes) : "";
-                $qryMotorData[$key]->timerFlag = implode(',', $flags);
-            }
-        }
-
-        //writeJson($req);
-        $res = array(
-            'Result'=>'Success',
+        
+        
+        
+        
+        $res = array('Result'=>'Success',
             'Status'=>'Registered successfully',
-            'mototData'=>$qryMotorData,
+            'motor'=>$qryMotorData,
             'soilSensor'=>$qrySenData
         );
-
         echo json_encode($res);exit;
     }
-
 }
+
 
 function getReading()
 {
-	
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-
-    $db = getConnection();#establish Db connection
-
+     
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
     $userId = $req->userId;
     $email = $req->email;
@@ -587,7 +407,7 @@ function getReading()
     $tblName = $req->tblName;
     $nData = $req->sensorType;
     $sensorType = $req->sensorType;
-   
+
     if($sensorType="soil")
     {
         $sType = 1;
@@ -603,13 +423,12 @@ function getReading()
     $sensorCount = $req->sensorCount;
     if($nData == "soil")
     {
-        $sql = "SELECT *,sensorName.id as sensorId, sensorAlert.alertImage as alertImage FROM ".$tblName." 
+        $sql = "SELECT *,sensorName.id as sensorId FROM ".$tblName." 
         JOIN sensorName on sensorName.device = ".$tblName.".device
         join sensorAlert on sensorAlert.device = sensorName.device
         WHERE 
-        ".$tblName.".id IN (SELECT MAX(id) FROM ".$tblName."  GROUP BY device)  and  ".$tblName.".device IN ($req->device) ";
-
-        
+        ".$tblName.".id IN (SELECT MAX(id) FROM ".$tblName." GROUP BY device)";
+        //echo $sql;exit;
         $qrytbl = $db->prepare($sql);
          $qrytbl->execute();
          $qrytblData = $qrytbl->fetchAll(PDO::FETCH_OBJ);
@@ -642,10 +461,9 @@ function getReading()
         $qrytblData[0]->name = $qrySentblData->name;
         $qrytblData[0]->lowRange = $qrySentblData->lowRange;
         $qrytblData[0]->highRange = $qrySentblData->highRange;
-	$qrytblData[0]->tempLowRange = $qrySentblData->tempLowRange;
- 	$qrytblData[0]->tempHighRange = $qrySentblData->tempHighRange;
+    
         $qrytblData[0]->status = $qrySentblData->status;
-	$qrytblData[0]->alertImage = $qrySentblData->alertImage;
+
         
 
          $res = array('Result'=>'Success',
@@ -663,54 +481,11 @@ function getReading()
     echo json_encode($res);exit;
 
 }
-
-function timerMotor()
-{
-        $request = Slim::getInstance()->request();
-        $req = json_decode($request->getBody());
-	$db = getConnection();
-        $stime = date('Y-m-d h:i:s');
-        $hour = 0;
-        $Minutes = $req->endHour;
-	$seconds = $req->endMinutes;
-	$userId = $req->userId;
-        $motorId = $req->motorId;
-        $cmd = $req->cmd;
-
-$endTime = date('Y-m-d h:i:s',strtotime('+'.$hour.' hour +'.$Minutes.' minutes +' .$seconds.' seconds',strtotime($stime)));
-
-    $select = "SELECT * from  MotorTimer where userId = '$userId' and motorId = '$motorId' ";
-
-    $qry = $db->prepare($select);
-    $qry->execute();
-    $chkData = $qry->fetch(PDO::FETCH_OBJ);
-    if($chkData)
-    {
-        
-
-         $insert = "UPDATE  MotorTimer SET startTime = '$stime',endTime='$endTime',cronStatus = 0,cmd = '$cmd',endMin='$Minutes',endSec='$seconds' WHERE motorId = '$motorId' ";
-        $qryinsert = $db->prepare($insert);
-        $qryinsert->execute();
-    }
-    else
-    {
-
- $insert = "INSERT INTO MotorTimer (userId,motorId, startTime,endTime,cmd,endMin,endSec) VALUES ('$userId','$motorId', '$stime','$endTime','$cmd','$Minutes','$seconds')";
-        $qryinsert = $db->prepare($insert);
-        $qryinsert->execute();
-    }
-
-        $res = array('Result'=>'Success',
-                 'Status'=>'Registered successfully');
-
-	echo json_encode($res);exit;
- }
-
 function updateSensor()
 {
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
     $userId = $req->userId;
     $email = $req->email;
@@ -752,9 +527,9 @@ function updateSensor()
 }
 function updateMotorStatus()
 {
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
 
     $userId = $req->userId;
@@ -767,38 +542,42 @@ function updateMotorStatus()
 
     $chk = "SELECT * from register where userId = $userId";
     $update = "UPDATE timer set status = '$status' where motorId = '$motorId'";
-	$updateMotor = "UPDATE motorName set motorStatus = '$status' where motorId = '$motorId'";
-    $select = "SELECT * from motorName ";#where userId = '$userId'";
+    $select = "SELECT * from motorName ";
     $moterData = "SELECT * from motorName where motorId = '$motorId'";
-	$updateMotorCron = "UPDATE MotorTimer set cronStatus = 1 where motorId = '$motorId'";
+
     $qrymoterData = $db->prepare($moterData);
     $qrymoterData->execute();
     $mdata = $qrymoterData->fetch(PDO::FETCH_OBJ);
-    
+
+
     $qry = $db->prepare($chk);
     $qry->execute();
     $chkData = $qry->fetch(PDO::FETCH_OBJ);
     if($chkData)
     {
-         
-	 $qryUpM = $db->prepare($updateMotor);
-	 $qryUpM->execute();
-	 $qrySelect = $db->prepare($select);
-	 $qrySelect->execute();
-	 if($show == 'Off')
-	 {
-	     $qryUpMs = $db->prepare($updateMotorCron);
-	     $qryUpMs->execute();
-	 }
-	 $motor_name = isset($mdata->name) ? $mdata->name : '';
-	 $message = $motor_name." Switched ".$show ;$title="Motor Switched";
-	 exec("sudo ".$trigger);
-	 send_gcm_notify($chkData->deviceToken,$message,$title);
-	
-	$update = "INSERT INTO updateMotorCron (userId,message,title,cronStatus) VALUES ('$userId','$message','$title','0')";
-	$qryUp = $db->prepare($update);
-	$qryUp->execute();
-   	
+         $qryUp = $db->prepare($update);
+         $qryUp->execute();
+
+         $qrySelect = $db->prepare($select);
+         $qrySelect->execute();
+
+
+
+    $allUser = "SELECT * from register where userId != $userId";
+    $qry = $db->prepare($allUser);
+    $qry->execute();
+    $chkAllData = $qry->fetchAll(PDO::FETCH_OBJ);
+
+    $message = $mdata->name." Switched ".$show ;
+    $title="Motor Switched";
+    foreach($chkAllData as $user)
+    {
+
+        send_gcm_notify($user->deviceToken,$message,$title);
+
+    }
+
+
 
          $state = "updated";
     } 
@@ -811,28 +590,27 @@ function updateMotorStatus()
                  'data'=>$state,
                  
                  );
-    
+     //exec("sudo python ".$trigger);
     echo json_encode($res);exit;   
 
 }
 
 function updateMotorName()
 {
-    $request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
 
     $userId = $req->userId;
     $motorId = $req->motorId;
-    //$status = $req->status;
+   
     $name = $req->name;
 
     $chk = "SELECT * from register where userId = $userId";
     
     $update = "UPDATE motorName set name = '$name' where motorId = '$motorId'";
-    $select = "SELECT * from motorName ";#where userId = $userId
-
+    $select = "SELECT * from motorName ";
     $moterData = "SELECT * from motorName where motorId = '$motorId'";
 
     $qrymoterData = $db->prepare($moterData);
@@ -881,21 +659,19 @@ function updateMotorName()
 
 }
 
-
 function setTimer()
 {
+    //echo "aaa"; exit;
     $request = Slim::getInstance()->request();
     $req = json_decode($request->getBody());
-
     $db = getConnection();
     $date = date("Y-m-d H:i:s");
-
+    
     $userId = isset($req->userId) ? $req->userId : '';
     $motorId = isset($req->motorId) ? $req->motorId : '';
     $deviceToken = isset($req->deviceToken) ? $req->deviceToken : '';
     $email = isset($req->email) ? $req->email : '';
-    $timerImage = isset($req->timerImage) ? $req->timerImage : '';
-
+    
     $MotorOn = isset($req->MotorOn) ? $req->MotorOn : '';
     $MotorOff = isset($req->MotorOff) ? $req->MotorOff : '';
     $MotorOnTime = isset($req->MotorOnTime) ? $req->MotorOnTime : '';
@@ -903,12 +679,11 @@ function setTimer()
     $fixedTime = isset($req->fixedTime) ? $req->fixedTime : '';
     $name = isset($req->name) ? $req->name : '';
     $status =  isset($req->status) ? $req->status : '';
-    $timerFlag = isset($req->timerFlag) ? $req->timerFlag : '';
-
-    $updateMotor = "UPDATE motorName SET name ='$name', timerImage='$timerImage' WHERE motorId= '$motorId'";
+    
+    $updateMotor = "UPDATE motorName SET name ='$name' WHERE motorId= '$motorId'";
     $updateMotorqry = $db->prepare($updateMotor);
     $updateMotorqry->execute();
-
+    
     $chk = "SELECT * FROM register WHERE userId = $userId";
     $qry = $db->prepare($chk);
     $qry->execute();
@@ -919,55 +694,54 @@ function setTimer()
         /* $insert = "UPDATE timer SET userId = $userId, MotorOn = '$MotorOn', MotorOff ='$MotorOff', MotorOnTime='$MotorOnTime', MotorOffTime='$MotorOffTime', fixedTime='fixedTime', status = '$status' WHERE motorId='$motorId'";
         $qry = $db->prepare($insert);
         $qry->execute(); */
-
+        
         $deleteTimer = "DELETE FROM timer WHERE motorId='$motorId'";
         $deleteqry = $db->prepare($deleteTimer);
         $deleteqry->execute();
+        
+        $onTimes = explode(',', $MotorOnTime);
+        $offTimes = explode(',', $MotorOffTime);
         $count = 0;
-        if($MotorOnTime!="") {
-            $onTimes = explode(',', $MotorOnTime);
-            $offTimes = explode(',', $MotorOffTime);
-            $flags = explode(',', $timerFlag);
-            if (count($onTimes) > 0 && (count($onTimes) == count($offTimes))) {
-                $timerCount = count($onTimes);
-                for ($i = 0; $i < $timerCount; $i++) {
-                    $onTime = isset($onTimes[$i]) ? date('H:i:s', strtotime($onTimes[$i])) : null;
-                    $offTime = isset($offTimes[$i]) ? date('H:i:s', strtotime($offTimes[$i])) : null;
-                    $flag = isset($flags[$i]) ? trim($flags[$i]) : 0;
-                    $insertTimer = "INSERT INTO timer (motorId, userId, MotorOn, MotorOff, MotorOnTime, MotorOffTime, fixedTime, status, timerFlag) VALUES ('$motorId', '$userId', '$MotorOn', '$MotorOff', '$onTime', '$offTime', '$fixedTime', '$status', '$flag')";
-                    $qryTimer = $db->prepare($insertTimer);
-                    $qryTimer->execute();
-                    $count++;
-                }
+        if(count($onTimes) > 0 && (count($onTimes) == count($offTimes)))
+        {
+            $timerCount = count($onTimes);
+            for($i=0; $i<$timerCount; $i++)
+            {
+                $onTime = isset($onTimes[$i]) ? $onTimes[$i] : null;
+                $offTime = isset($offTimes[$i]) ? $offTimes[$i] : null;
+                $insertTimer= "INSERT INTO timer (motorId, userId, MotorOn, MotorOff, MotorOnTime, MotorOffTime, fixedTime, status) VALUES ('$motorId', '$userId', '$MotorOn', '$MotorOff', '$onTime', '$offTime', '$fixedTime', '$status')";
+                $qryTimer = $db->prepare($insertTimer);
+                $qryTimer->execute();
+                $count++;
             }
         }
-
+        
         $lastTimer = "SELECT * FROM timer JOIN motorName ON motorName.motorId =timer.motorId  WHERE timer.motorId= '$motorId'";
         $qryGetLast = $db->prepare($lastTimer);
         $qryGetLast->execute();
         //$qryGetLastData = $qryGetLast->fetch(PDO::FETCH_OBJ);
         $qryGetLastData = $qryGetLast->fetchAll(PDO::FETCH_OBJ);
-
+        
         $allUser = "SELECT * FROM register WHERE userId != $userId";
         $qry = $db->prepare($allUser);
         $qry->execute();
         $chkAllData = $qry->fetchAll(PDO::FETCH_OBJ);
-
+        
         $message = "Motor timer updated";
         $title = "Motor has been updated";
-
+        
         foreach($chkAllData as $user)
         {
             send_gcm_notify($user->deviceToken, $message, $title);
         }
-
+        
         $res = array(
             'Result'=>'Success',
             'data'=>$qryGetLastData,
             'count'=>$count,
         );
-
-        echo json_encode($res);exit;
+        
+        echo json_encode($res);exit;  
     }
     else //
     {
@@ -978,54 +752,48 @@ function setTimer()
 
 function setAlert()
 {
-	$request = Slim::getInstance()->request();#request Instance
-    $req = json_decode($request->getBody());#get body json content
-    $db = getConnection();#establish Db connection
+    $request = Slim::getInstance()->request();
+    $req = json_decode($request->getBody());
+    $db = getConnection();
     $date=date("Y-m-d H:i:s");
 
     $userId = $req->userId;
-    //$motorId = $_POST['motorId'];
+  
     $deviceToken = $req->deviceToken;
     $email = $req->email;
 
-	$lowRange = $req->lowRange; 
-	$highRange = $req->highRange;
-	$status = $req->status;
-	$device = $req->device;
-	$name = $req->name;
-	$tempLowRange = $req->tempLowRange;
-	$tempHighRange = $req->tempHighRange;
-	$ip = 0;
+   $lowRange = $req->lowRange;
+   $highRange = $req->highRange;
+   $status = $req->status;
+   $device = $req->device;
+   $name = $req->name;
+   $ip =0;
 
-   	if(isset($_POST['ip']))
-   	{
-		$ip = $_POST['ip'];
-   	}
+   if(isset($req->ip))
+   {
+    $ip = $req->ip;
+   }
     
-    $updateMotor = "UPDATE sensorName set name ='$name' where device = '$device'";
+    $updateMotor = "UPDATE sensorName set name ='$name' where device= '$device'";
     $updateMotorqry = $db->prepare($updateMotor);
     $updateMotorqry->execute();
 
-       
-	$alertImage = $req->alertImage;
-
     $chk = "SELECT * from register where userId = $userId";
-  	if($req->tempLowRange != "" && $req->tempHighRange != "")
-	{
-		$update = "UPDATE sensorAlert set tempLowRange= '$tempLowRange',tempHighRange = '$tempHighRange',status='$status',
-			lowRange='$lowRange',min=0,tempMin=0,highRange = '$highRange', alertImage = '$alertImage'
-    		where device = '$device'";		
 
-	}
-	else
-	{
-		$update = "UPDATE sensorAlert set lowRange='$lowRange',min=0,highRange = '$highRange',alertImage = '$alertImage'
-    	where device = '$device'";
-	}
-    
+    if($req->tempLowRange != "" && $req->tempHighRange != "")
+    {
+       $update = "UPDATE sensorAlert set lowRange= '$lowRange' ,highRange = '$highRange',status='$status'
+    where device = '$device'";  
+    }
+    else
+    {
+       $update = "UPDATE sensorAlert set lowRange= '$lowRange',highRange = '$highRange',status='$status'
+    where device = '$device'";  
+    }
+   
 
     $selectSensor  = "SELECT * from sensorName 
-    join sensorAlert on sensorAlert.device = sensorName.device where sensorAlert.device = '$device'";
+    join sensorAlert on sensorAlert.device = sensorName.device where sensorAlert.device= '$device'";
     
     $qry = $db->prepare($chk);
     $qry->execute();
@@ -1040,26 +808,25 @@ function setAlert()
         $qrySelect->execute();
         $qrySelectAll = $qrySelect->fetch(PDO::FETCH_OBJ);
 
+    $allUser = "SELECT * from register where userId != $userId";
+    $qry = $db->prepare($allUser);
+    $qry->execute();
+    $chkAllData = $qry->fetchAll(PDO::FETCH_OBJ);
 
-		$allUser = "SELECT * from register where userId = $userId";
-		$qry = $db->prepare($allUser);
-		$qry->execute();
-		$chkAllData = $qry->fetch(PDO::FETCH_OBJ);
+    $message = $qrySelectAll->name." Sensor updated" ;$title="Sensor hasbeen updated";
+    foreach($chkAllData as $user)
+    {
 
+        send_gcm_notify($user->deviceToken,$message,$title,$ip);
 
-    	$message = $qrySelectAll->name." Sensor updated" ;$title="Sensor hasbeen updated";
-		//send_gcm_notify($chkAllData->deviceToken,$message,$title,$ip);
+    }
 
-      	$update = "INSERT INTO setAlertCron (userId,message,title,cronStatus) VALUES ('$userId','$message','$title','0')";
-	    $qryUp = $db->prepare($update);
-	    $qryUp->execute();
-    
-
-        $res = array('Result'=>'Success',
+         $res = array('Result'=>'Success',
                  'data'=>$qrySelectAll,
                  );
         echo json_encode($res);exit;
         
+
     }
 
 }
@@ -1071,45 +838,45 @@ function setAlert()
 
 
 
+
+
+
 function send_gcm_notify($devicetoken,$message,$title,$ip = 0)
 {
-
-    if (!defined('FIREBASE_API_KEY')) define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGj2Xvo09h3t_31FX8CppXx2-qhLZnOUUD3mIMhcKTPvVWgQbpSXVSP9OhFccTZLIzFVelP7s_xf3WXuueBWpm5A_h7-e4avkrFJpkjSDNMJDnPg8txofEMQybW8uYUcHD6-L5T");
-        if (!defined('FIREBASE_FCM_URL')) define("FIREBASE_FCM_URL", "https://fcm.googleapis.com/fcm/send");
-
-#$me = html_entity_decode($message,ENT_HTML5);
-            $fields = array(
-                'to' => $devicetoken ,
-                'priority' => "high",
-                'notification' => array( "tag"=>"chat", "title"=>$title,"body" =>$message,"ip"=>$ip,"priority"=>"high"),
-            );
-// echo "<br>";
-//json_encode($fields);
-//echo "<br>";
-            $headers = array(
-                'Authorization: key=' . FIREBASE_API_KEY,
-                'Content-Type: application/json'
-            );
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, FIREBASE_FCM_URL);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-            
-
-            $result = curl_exec($ch);
-            if ($result === FALSE)
-            {
-                die('Problem occurred: ' . curl_error($ch));
-            }
-            curl_close($ch);
-
+    if (!defined('FIREBASE_API_KEY')) 
+    {
+        define("FIREBASE_API_KEY", "AAAAyWReL-M:APA91bGEYqULDMblKQg40gmz6n6uqTJG7rsKVi1E37Rm1Qal682L7pRrfa8B1nbb--6JtxLqDaerUpqF02MRXmNDLfQwpRV2YrySiOB9UiCWekVa20piiX1hzFVYiKH4qpPv3CEV18sw");
+    }
+    if (!defined('FIREBASE_FCM_URL')) 
+    {
+        define("FIREBASE_FCM_URL", "https://fcm.googleapis.com/fcm/send");
+    }
+    
+    $fields = array(
+        'to' => $devicetoken ,
+        'priority' => "high",
+        'notification' => array("tag"=>"chat", "title"=>$title, "body" =>$message, "ip"=>$ip, "priority"=>"high"),
+    );
+    
+    $headers = array(
+        'Authorization: key=' . FIREBASE_API_KEY,
+        'Content-Type: application/json'
+    );
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, FIREBASE_FCM_URL);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+    $result = curl_exec($ch);
+    if($result === FALSE)
+    {
+        die('Problem occurred: ' . curl_error($ch));
+    }
+    curl_close($ch);
 }
-
-
 
 
 function forgotpassword(){
@@ -1179,15 +946,15 @@ function forgotpassword(){
             </body>
             </html>';
             $mail       = new PHPMailer();
-$mail->IsSMTP(); // enable SMTP
-$mail->SMTPAuth = true; // authentication enabled
-$mail->SMTPSecure = 'ssl'; // secure transfer enabled REQUIRED for Gmail
+$mail->IsSMTP(); 
+$mail->SMTPAuth = true; 
+$mail->SMTPSecure = 'ssl'; 
 $mail->Host = "smtp.gmail.com";
-$mail->Port = 465; // or 587
+$mail->Port = 465; 
 $mail->IsHTML(true);
-$mail->Username = 'codekhadimail@gmail.com';//codekhadimail@gmail.com
-$mail->Password = '!@#qweasd';//'!@#qweasd';//
-$mail->From = $mail->Username; //Default From email same as smtp user
+$mail->Username = 'codekhadimail@gmail.com';
+$mail->Password = '!@#qweasd';
+$mail->From = $mail->Username; 
 $mail->FromName = "agilehealth";
 $mail->AddAddress($register->email, '');
 $mail->CharSet = 'UTF-8';
@@ -1198,7 +965,7 @@ if($mail->Send())
     $res = array('Result'=>'Success',
                  'Status'=>'Password reset link has been sent to your mail');
     echo json_encode($res); exit;
-//echo '{ "Result": "Success","Status":"Password reset link has been sent to your mail"}';
+
 } else {
     $res = array('Result'=>'Failed',
                  'Status'=>'Email sent failed');
@@ -1227,8 +994,7 @@ function verify($id,$token)
 {
     $date=date('Y-m-d H:i:s');
     $email = base64_decode($id);
-//echo $email;
-//echo $token;
+
     echo "<br>";
     $qry="update ah_customer set profileStatus=1,updated_at='$date' where email=:email and tempToken=:tempToken";
     try
@@ -1238,30 +1004,17 @@ function verify($id,$token)
         $stmt->bindParam("email", $email);
         $stmt->bindParam("tempToken", $token);
         $stmt->execute();
-//$user = $stmt->fetch(PDO::FETCH_OBJ);
+
         $html = "<center><h2>Your account has been verified successfully.</h2></center>";
         echo $html;
     }
-//header('Location : verify.php');
+
     catch(PDOException $e)
     {
         echo $e;
         $res = array('Result'=>'Failed');
         echo json_encode($res); exit;
     }
-
-}
-
-function getConnection() {
-
-    $dbhost="localhost";
-    $dbuser="khaled";
-    $dbpass="test123";
-    $dbname="phpauto";
- $dbh = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass,array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
-  $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-   return $dbh;
-
 
 }
 
